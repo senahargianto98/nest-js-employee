@@ -23,17 +23,28 @@ export class EmployeeService implements IEmployeeService {
     async exportPdf(): Promise<IResponse> {
         try {
             const data = await this.employeeRepository.getEmployee();
+            const tableData = data.data.map(employee => [
+                employee.nama,
+                employee.nomor,
+                employee.jabatan,
+                employee.departmen,
+                employee.foto,
+                employee.status
+            ]);
+            const tableHeaders = ['Name', 'Nomor', 'Jabatan', 'Department', 'Foto', 'Status'];
+            tableData.unshift(tableHeaders);
             const doc = new PDFDocument();
             const timeNow = BigInt(Date.now());
-            const stream = fs.createWriteStream(`directory/employees_${timeNow}.pdf`);
+            const fileName = `directory/employees_${timeNow}.pdf`;
+            const stream = fs.createWriteStream(fileName);
             doc.pipe(stream);
-            doc.text(JSON.stringify(data.data));
             doc.end();
             const url = `http://localhost:3000/employees_${timeNow}.pdf`
             return new Response(HttpStatus.OK, 'ok', 1, url, null);
         } catch (error) {
             throw error;
         }
+
     }
 
     async exportCsv(): Promise<IResponse> {
