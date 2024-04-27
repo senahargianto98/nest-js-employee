@@ -1,0 +1,59 @@
+stages:
+  - deploy
+
+.testing-stage:
+  stage: deploy
+  script:
+    - echo "HELLO INI TESTING STAGE"
+    - echo "Testing done!"
+  only:
+  - main
+
+.start-app:
+  stage: deploy
+  script: 
+    - echo "Starting a new PM2 application..."
+    - curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash && export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" 
+    - nvm install v16.20.2
+    - nvm use v16.20.2
+    - npm install pm2 -g
+    - pm2 list
+    - npm cache clean --force
+    - npm install 
+    - npx prisma generate
+    - npm run build
+    - pm2 start dist/main.js --name coopcoffee-api -- -p 3000
+    - pm2 list
+    - echo "Application has been successfully started."
+  only:
+  - main
+
+.update-app:
+  stage: deploy
+  script:
+    - echo "Updating Coopcoffee API..."
+    - curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash && export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" 
+    - nvm install v21
+    - nvm use v21
+    - npm install pm2 -g
+    - pm2 list 
+    - pm2 stop coopcoffee-api
+    - npm install
+    - npm run build
+    - pm2 start coopcoffee-api
+    - pm2 list
+    - echo "Coopcoffee API has been successfully updated."
+  only:
+  - main
+
+delete-app:
+  stage: deploy
+  script:
+    - echo "Updating Coopcoffee API..."
+    - curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash && export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" 
+    - nvm install v21
+    - nvm use v21
+    - npm install pm2 -g
+    - pm2 list
+    - pm2 delete coopcoffee-api
+    - pm2 list
